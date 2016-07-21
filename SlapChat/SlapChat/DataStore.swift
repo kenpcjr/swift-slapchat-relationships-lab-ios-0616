@@ -13,6 +13,8 @@ class DataStore {
     
     var messages:[Message] = []
     
+    var recipients:[Recipient] = []
+    
     static let sharedDataStore = DataStore()
     
     
@@ -43,6 +45,20 @@ class DataStore {
         
         messagesRequest.sortDescriptors = [createdAtSorter]
         
+        let alphabetSort = NSSortDescriptor.init(key: "name", ascending: true)
+        
+        let fetchRecipentsRequest = NSFetchRequest.init(entityName: "Recipient")
+        fetchRecipentsRequest.sortDescriptors = [alphabetSort]
+        
+        do{
+            try self.recipients = self.managedObjectContext.executeFetchRequest(fetchRecipentsRequest) as! [Recipient]
+            
+        } catch {
+            
+            print("ERROR fetching recipients")
+        }
+
+        
         do{
             messages = try managedObjectContext.executeFetchRequest(messagesRequest) as! [Message]
         }catch let nserror1 as NSError{
@@ -59,20 +75,33 @@ class DataStore {
     
     func generateTestData() {
         
+        let bob: Recipient = NSEntityDescription.insertNewObjectForEntityForName("Recipient", inManagedObjectContext: self.managedObjectContext) as! Recipient
+        
+        bob.name = "Bob"
+        
+        let lisa: Recipient = NSEntityDescription.insertNewObjectForEntityForName("Recipient", inManagedObjectContext: self.managedObjectContext) as! Recipient
+        
+        lisa.name = "lisa"
+        
+        
         let messageOne: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
         
         messageOne.content = "Message 1"
         messageOne.createdAt = NSDate()
+        messageOne.recipient = bob
         
         let messageTwo: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
         
         messageTwo.content = "Message 2"
         messageTwo.createdAt = NSDate()
+        messageTwo.recipient = bob
         
         let messageThree: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
         
         messageThree.content = "Message 3"
         messageThree.createdAt = NSDate()
+        messageThree.recipient = lisa
+    
         
         saveContext()
         fetchData()
